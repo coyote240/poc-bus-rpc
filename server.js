@@ -46,6 +46,25 @@ function deleteMessage (receipt) {
 
 }
 
+function respond (msg) {
+	var params = {
+		Message: 'Pong',
+		TopicArn: 'arn:aws:sns:us-west-2:285138796743:poc-service-response'
+	};
+
+	return new Promise((resolve, reject) => {
+
+		sns.publish(params, (err, data) => {
+			if (err) {
+				reject(err);
+			} else {
+				resolve(data);
+			}
+		});
+
+	});
+}
+
 timers.setInterval(function () {
 	receive().then(
 			(data) => {
@@ -54,14 +73,24 @@ timers.setInterval(function () {
 				}
 
 				var msg = data.Messages.shift();
-				console.log('Message: ', msg.MessageId);
+				console.log('Message: ', msg);
+
+				respond(msg).then(
+					(response) => {
+						console.log('Response success: ', response);
+					},
+					(error) => {
+						console.log('Response error: ', error);
+					});
+
+
 				deleteMessage(msg.ReceiptHandle).then(
-						(response) => {
-							console.log('Delete success: ', response);
-						},
-						(error) => {
-							console.log('Delete Error: ', error);
-						});
+					(response) => {
+						console.log('Delete success: ', response);
+					},
+					(error) => {
+						console.log('Delete Error: ', error);
+					});
 			},
 			(error) => {
 				console.log('Receive Error: ', error);
